@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+.tmp/
+*.bak
+*.csv
+
+.streamlit.err.log
+.streamlit.out.log
+.streamlit/*
+!.streamlit/config.toml
+
+*.xlsx
+!FINANZAS_demo.xlsx
+!mercado_pago_demo.xlsx
+
+docs/screenshots/captura bancaria*.jpg
+docs/screenshots/captura bancaria*.jpeg
