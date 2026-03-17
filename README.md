@@ -80,6 +80,30 @@ Las capturas publicables quedan en `docs/screenshots/`:
 - [`05-bank-capture-preview.png`](docs/screenshots/05-bank-capture-preview.png)
 - [`06-month-insights.png`](docs/screenshots/06-month-insights.png)
 
+## Vista rapida
+
+### Home
+
+![Home](docs/screenshots/01-home.png)
+
+### Carga desde Excel
+
+![Excel upload](docs/screenshots/02-excel-upload.png)
+
+### Revision antes de importar
+
+![Review import](docs/screenshots/03-review-import.png)
+
+### Captura bancaria
+
+![Bank capture editor](docs/screenshots/04-bank-capture-editor.png)
+
+![Bank capture preview](docs/screenshots/05-bank-capture-preview.png)
+
+### Insights mensuales
+
+![Month insights](docs/screenshots/06-month-insights.png)
+
 ## Ejecutar con doble click (Windows)
 
 - `run_app.bat`: inicia la app sin abrir navegador automaticamente
