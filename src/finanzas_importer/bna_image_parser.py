@@ -50,7 +50,6 @@ def _extract_text_with_ocr(source_bytes: bytes) -> str:
         candidates = [
             Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe"),
             Path(r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"),
-            Path(r"C:\Users\Pilar\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"),
         ]
         for candidate in candidates:
             if candidate.exists():

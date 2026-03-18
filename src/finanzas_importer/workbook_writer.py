@@ -15,9 +15,7 @@ from copy import copy
 from .utils import create_backup_path, parse_number_ar
 
 TABLE_NAME = "tblControlIngresosGastos"
-LEGACY_TABLE_NAMES = ("tblJoaquin",)
 SHEET_NAME = "Control de ingresos y gastos"
-LEGACY_SHEET_NAMES = ("Joaquin",)
 DEFAULT_ARS_FORMAT = '#,##0.00 "ARS"'
 DEFAULT_DATE_FORMAT = "dd/mm/yyyy"
 DEFAULT_MES_FORMAT = r"mmm\-yyyy"
@@ -57,16 +55,28 @@ class TargetRange(NamedTuple):
     has_table: bool
 
 
+def _sheet_looks_like_finance_log(sheet) -> bool:
+    header_values = {
+        _normalize_header_name(sheet.cell(row=1, column=col).value)
+        for col in range(1, sheet.max_column + 1)
+        if sheet.cell(row=1, column=col).value not in (None, "")
+    }
+    required_headers = {"fecha", "tipo", "categoria", "descripcion", "monto"}
+    return required_headers.issubset(header_values)
+
+
 def resolve_sheet_name(workbook) -> str | None:
-    for candidate in (SHEET_NAME, *LEGACY_SHEET_NAMES):
-        if candidate in workbook.sheetnames:
-            return candidate
+    if SHEET_NAME in workbook.sheetnames:
+        return SHEET_NAME
+    for sheet_name in workbook.sheetnames:
+        if _sheet_looks_like_finance_log(workbook[sheet_name]):
+            return sheet_name
     return None
 
 
 def _get_table(sheet) -> Table | None:
     for table in sheet.tables.values():
-        if table.name in (TABLE_NAME, *LEGACY_TABLE_NAMES):
+        if table.name == TABLE_NAME:
             return table
     first_table = next(iter(sheet.tables.values()), None)
     return first_table
