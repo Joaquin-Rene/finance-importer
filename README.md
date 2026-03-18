@@ -77,8 +77,9 @@ Las capturas publicables quedan en `docs/screenshots/`:
 - [`02-excel-upload.png`](docs/screenshots/02-excel-upload.png)
 - [`03-review-import.png`](docs/screenshots/03-review-import.png)
 - [`04-bank-capture-editor.png`](docs/screenshots/04-bank-capture-editor.png)
-- [`05-bank-capture-preview.png`](docs/screenshots/05-bank-capture-preview.png)
+- [`05-month-kpis.png`](docs/screenshots/05-month-kpis.png)
 - [`06-month-insights.png`](docs/screenshots/06-month-insights.png)
+- [`07-import-ready.png`](docs/screenshots/07-import-ready.png)
 
 ## Vista rapida
 
@@ -98,11 +99,17 @@ Las capturas publicables quedan en `docs/screenshots/`:
 
 ![Bank capture editor](docs/screenshots/04-bank-capture-editor.png)
 
-![Bank capture preview](docs/screenshots/05-bank-capture-preview.png)
+### KPIs del mes
+
+![Month KPIs](docs/screenshots/05-month-kpis.png)
 
 ### Insights mensuales
 
 ![Month insights](docs/screenshots/06-month-insights.png)
+
+### Confirmacion final
+
+![Import ready](docs/screenshots/07-import-ready.png)
 
 ## Ejecutar con doble click (Windows)
 

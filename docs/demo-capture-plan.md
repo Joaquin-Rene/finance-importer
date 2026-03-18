@@ -19,18 +19,20 @@ Usar este orden para generar capturas consistentes del proyecto.
    Mostrar el modo `Archivo Excel` con el archivo demo cargado.
 
 3. Review import
-   Mostrar metricas de control, preview y bloque de importacion listo.
+   Mostrar la preview de movimientos ya categorizada y lista para revisar.
 
 4. Bank capture editor
    Mostrar la tabla editable ya completa y prolija.
    Priorizar la grilla final, no la imagen bancaria original.
 
-5. Bank capture preview
-   Mostrar la preview final antes de importar.
-   Evitar thumbnails o bloques donde se vean las capturas originales completas.
+5. Month KPIs
+   Mostrar tarjetas o resumen rapido del mes despues de la lectura del demo.
 
 6. Month insights
    Mostrar KPIs y al menos un grafico para cerrar la demo.
+
+7. Import ready
+   Mostrar alertas accionables y confirmacion final de escritura.
 
 ## Criterio visual
 
@@ -46,5 +48,6 @@ Usar este orden para generar capturas consistentes del proyecto.
 - `docs/screenshots/02-excel-upload.png`
 - `docs/screenshots/03-review-import.png`
 - `docs/screenshots/04-bank-capture-editor.png`
-- `docs/screenshots/05-bank-capture-preview.png`
+- `docs/screenshots/05-month-kpis.png`
 - `docs/screenshots/06-month-insights.png`
+- `docs/screenshots/07-import-ready.png`

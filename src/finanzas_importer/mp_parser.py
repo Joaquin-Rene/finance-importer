@@ -118,9 +118,51 @@ def _resolve_tipo(transaction_type: object, amount: float) -> str:
     return "Gasto" if amount < 0 else "Ingreso"
 
 
-def _apply_safe_category_rules(description: object, default_category: str = "Otros") -> tuple[str, str, str, str]:
+def infer_category_from_description(description: object, default_category: str = "Otros") -> tuple[str, str, str, str]:
     desc = str(description).strip()
     normalized = _strip_accents(desc.lower())
+
+    if "ingreso principal" in normalized:
+        return desc, "Ingresos", "Base", "MP_INCOME_BASE"
+    if "proyecto independiente" in normalized:
+        return desc, "Ingresos", "Proyecto", "MP_INCOME_PROJECT"
+    if "gastos compartidos" in normalized:
+        return desc, "Ingresos", "Compartido", "MP_SHARED_IN"
+    if "ajuste demo" in normalized or "ajuste viaje demo" in normalized or "reintegro" in normalized:
+        return desc, "Ingresos", "Ajuste", "MP_INCOME_ADJUSTMENT"
+    if "vivienda mensual" in normalized:
+        return desc, "Vivienda", "Fijo", "MP_HOUSING"
+    if "fondo viaje" in normalized:
+        return desc, "Ahorro", "Fondo viaje", "MP_SAVINGS"
+    if "mercado semanal" in normalized or "compra de cercania" in normalized:
+        return desc, "Comida", "Mercado", "MP_FOOD"
+    if "salida casual" in normalized:
+        return desc, "Comida", "Salida", "MP_DINING"
+    if "salud y cuidado" in normalized:
+        return desc, "Salud", "Cuidado", "MP_HEALTH"
+    if "combustible" in normalized or "movilidad urbana" in normalized:
+        return desc, "Transporte", "Movilidad", "MP_TRANSPORT"
+    if "suscripcion media" in normalized or "suscripcion demo" in normalized:
+        return desc, "Ocio", "Digital", "MP_DIGITAL"
+    if "actividad fisica" in normalized:
+        return desc, "Bienestar", "Habito", "MP_WELLNESS"
+    if "regalo planificado" in normalized:
+        return desc, "Regalos", "Planificado", "MP_GIFTS"
+    if normalized.startswith("transferencia recibida"):
+        return desc, "Ingresos", "Transferencia", "MP_TRANSFER_IN"
+    if normalized.startswith("transferencia enviada"):
+        return desc, "Transferencias", "Salida", "MP_TRANSFER_OUT"
+
+    if normalized in {"cr interb", "cap inter"} or "interb" in normalized:
+        return desc, "Ingresos", "Transferencia", "BANK_TRANSFER_IN"
+    if normalized == "db transf":
+        return desc, "Transferencias", "Salida", "BANK_TRANSFER_OUT"
+    if normalized in {"cpra.sup", "cpra.merp", "cpra.dia"}:
+        return desc, "Comida", "Consumo diario", "BANK_FOOD"
+    if normalized.startswith("cpra.la"):
+        return desc, "Compras", "Consumo general", "BANK_PURCHASE"
+    if normalized.startswith("cpra."):
+        return desc, "Compras", "Consumo general", "BANK_PURCHASE"
 
     if re.search(r"\bdia\b", normalized) or "dia tienda" in normalized or "supermercados dia" in normalized:
         return "Supermercado dia", "Comida", "", "DIA"
@@ -221,7 +263,7 @@ def parse_mercado_pago_excel(path_or_buffer: str | Path | BinaryIO) -> ParseResu
     }
     mp = mp.loc[~mask_rendimientos & ~mask_self_transfer].copy()
 
-    categories = mp["descripcion"].map(lambda d: _apply_safe_category_rules(d, default_category="Otros"))
+    categories = mp["descripcion"].map(lambda d: infer_category_from_description(d, default_category="Otros"))
     mp["descripcion"], mp["categoria"], mp["subcategoria"], mp["regla_categoria"] = zip(*categories)
     nadia_mask = mp["TRANSACTION_TYPE"].map(_is_nadia_transfer) | mp["TRANSACTION_TYPE"].map(_is_nadia_caceres_transfer)
     nadia_sent_mask = mp["TRANSACTION_TYPE"].map(_is_nadia_sent_transfer)

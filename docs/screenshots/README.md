@@ -9,8 +9,9 @@ Dejar en esta carpeta solo el set final publicable.
 2. `02-excel-upload.png`
 3. `03-review-import.png`
 4. `04-bank-capture-editor.png`
-5. `05-bank-capture-preview.png`
+5. `05-month-kpis.png`
 6. `06-month-insights.png`
+7. `07-import-ready.png`
 
 ## Criterio
 
@@ -19,6 +20,7 @@ Dejar en esta carpeta solo el set final publicable.
 - mantener mismo tamano de ventana en todas las capturas
 - evitar barras del sistema, notificaciones o rutas locales visibles
 - mostrar una sola idea clara por imagen
+- no publicar capturas que muestren thumbnails o fotos bancarias originales completas
 
 ## Antes de publicar
 

@@ -21,6 +21,7 @@ from src.finanzas_importer.analytics import (
 )
 from src.finanzas_importer.mp_parser import (
     ParseResult,
+    infer_category_from_description,
     normalize_description,
     parse_mercado_pago_excel,
 )
@@ -389,7 +390,7 @@ else:
                 .reset_index(drop=True)
             )
 
-        st.markdown("#### Paso 2 - Completar movimientos (manual)")
+        render_step_title(2, "Completar movimientos (manual)")
         st.caption(f"Fecha en formato dd/mm (se completa ano {current_year}). Usa `+` para ingresos y `-` para gastos. `CR INTERB` se toma como Ingreso.")
         edited_df = _render_bna_manual_editor(seed_df)
 
@@ -426,6 +427,7 @@ else:
                 tipo = "Ingreso"
 
             desc_safe = desc if desc else "Movimiento bancario"
+            desc_safe, categoria, subcategoria, regla = infer_category_from_description(desc_safe, default_category="Otros")
             desc_norm = normalize_description(desc_safe)
             ref_seed = f"bank_capture|manual|{fecha.strftime('%Y-%m-%d')}|{tipo}|{monto_val:.2f}|{desc_norm}"
             mp_ref = f"cap_{sha1(ref_seed.encode('utf-8')).hexdigest()[:12]}"
@@ -439,9 +441,9 @@ else:
                 {
                     "date": fecha,
                     "tipo": tipo,
-                    "categoria": "Otros",
-                    "subcategoria": "",
-                    "regla_categoria": "CAPTURA_BANCARIA_MANUAL_V1",
+                    "categoria": categoria,
+                    "subcategoria": subcategoria,
+                    "regla_categoria": f"CAPTURA_BANCARIA_MANUAL_{regla}",
                     "descripcion": desc_safe,
                     "descripcion_norm": desc_norm,
                     "monto": monto_val,
@@ -458,7 +460,7 @@ else:
 
         if rows:
             parsed_df = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
-            st.markdown("#### Paso 3 - Preview captura bancaria")
+            render_step_title(3, "Preview captura bancaria")
             render_preview_table(
                 format_preview_df(parsed_df).head(100),
                 ["date", "tipo_visual", "categoria", "descripcion", "monto", "compartido"],

@@ -11,7 +11,7 @@ import shutil
 import pandas as pd
 from PIL import Image, ImageFilter, ImageOps
 
-from .mp_parser import normalize_description
+from .mp_parser import infer_category_from_description, normalize_description
 from .utils import parse_number_ar
 
 try:
@@ -187,6 +187,7 @@ def parse_bna_image(source_bytes: bytes, source_name: str = "") -> BnaParseResul
         day_value, month_value = (int(part) for part in date_token.split("/"))
         date_value = _parse_date_ddmm_current_year(date_token)
         desc_norm = normalize_description(desc)
+        desc_resolved, categoria, subcategoria, regla = infer_category_from_description(desc, default_category="Otros")
         ref_seed = f"bank_capture|ocr|bna|{date_value.strftime('%Y-%m-%d')}|{tipo}|{amount_abs:.2f}|{desc_norm}"
         ref_hash = sha1(ref_seed.encode("utf-8")).hexdigest()[:12]
         mp_ref = f"cap_{ref_hash}"
@@ -196,10 +197,10 @@ def parse_bna_image(source_bytes: bytes, source_name: str = "") -> BnaParseResul
             {
                 "date": date_value,
                 "tipo": tipo,
-                "categoria": "Otros",
-                "subcategoria": "",
-                "regla_categoria": "CAPTURA_BANCARIA_OCR_V1",
-                "descripcion": desc.strip(),
+                "categoria": categoria,
+                "subcategoria": subcategoria,
+                "regla_categoria": f"CAPTURA_BANCARIA_OCR_{regla}",
+                "descripcion": desc_resolved.strip(),
                 "descripcion_norm": desc_norm,
                 "monto": amount_abs,
                 "mp_ref": mp_ref,
