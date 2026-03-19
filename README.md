@@ -1,107 +1,107 @@
 # Financial Operations Importer
 
-Streamlit tool for transaction intake, review, deduplication and controlled workbook updates.
+Streamlit tool for transaction intake, review, deduplication, and controlled workbook updates.
 
-Aplicacion local en Streamlit para importar, revisar y consolidar movimientos financieros en un workbook estructurado desde dos fuentes:
-- exportes Excel de Mercado Pago
-- capturas bancarias con carga manual asistida y OCR opcional
+A local Streamlit application that imports, reviews, and consolidates financial transactions into a structured workbook from two sources:
+- Mercado Pago Excel exports
+- bank screenshots with assisted manual entry and optional OCR preload
 
-El objetivo del proyecto es reducir carga manual, evitar duplicados y dejar una trazabilidad clara antes de actualizar el archivo destino.
+The goal is to reduce manual work, prevent duplicate imports, and keep a clear audit trail before updating the destination workbook.
 
-## Que resuelve
+## What It Solves
 
-- normaliza movimientos a un esquema comun
-- detecta duplicados por referencia y por clave compuesta
-- genera backup antes de modificar el archivo
-- muestra preview, metricas de control e insights mensuales
-- permite trabajar con assets demo para mostrar el flujo sin usar datos reales
+- normalizes transactions into a shared schema
+- detects duplicates by unique reference and compound key
+- creates a backup before modifying the workbook
+- shows a preview, control metrics, and monthly insights
+- supports safe demo assets so the full workflow can be shared without exposing real data
 
-## Business value
+## Business Value
 
-- reduce carga manual en el ingreso de movimientos
-- evita importaciones duplicadas antes del write-back
-- preserva la estructura del workbook y sus formulas
-- mejora la trazabilidad mensual con preview, alertas y KPIs
-- agrega una capa de control antes de actualizar el archivo final
+- reduces manual transaction entry
+- prevents duplicate imports before write-back
+- preserves workbook structure and formulas
+- improves monthly traceability with preview, alerts, and KPIs
+- adds a control layer before updating the final file
 
-## Alcance actual
+## Current Scope
 
-- `Mercado Pago (Excel)`: importa `.xlsx` o `.xls` exportados desde MP
-- `Captura bancaria`: toma `.jpg`, `.jpeg` o `.png` y permite completar movimientos en una tabla editable
-- `Workbook destino`: escribe en hoja `Control de ingresos y gastos`, tabla `tblControlIngresosGastos`
+- `Mercado Pago (Excel)`: imports `.xlsx` or `.xls` files exported from Mercado Pago
+- `Bank capture`: accepts `.jpg`, `.jpeg`, or `.png` files and lets the user complete movements in an editable table
+- `Destination workbook`: writes to sheet `Control de ingresos y gastos`, table `tblControlIngresosGastos`
 
-## Requisitos
+## Requirements
 
 - Python 3.10+
-- dependencias instaladas desde `requirements.txt`
-- para `Captura bancaria`: Tesseract OCR instalado en el sistema si queres usar precarga OCR
+- dependencies installed from `requirements.txt`
+- for `Bank capture`: Tesseract OCR installed locally if OCR preload is needed
 
-## Instalacion
+## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Ejecutar
+## Run
 
 ```bash
 streamlit run app.py
 ```
 
-## Flujo de uso
+## Workflow
 
-1. Completar la ruta local del workbook destino.
-2. Elegir modo de importacion.
-3. Subir archivo Excel o capturas bancarias.
-4. Revisar preview, duplicados y metricas.
-5. Confirmar importacion.
+1. Set the local path to the destination workbook.
+2. Choose the import mode.
+3. Upload an Excel file or bank captures.
+4. Review the preview, duplicates, and control metrics.
+5. Confirm the import.
 
-## Privacidad y demo
+## Privacy and Demo Assets
 
-El repo incluye assets seguros para demostracion:
+The repository includes safe demo assets:
 - `mercado_pago_demo.xlsx`
 - `FINANZAS_demo.xlsx`
 
-Estos archivos estan sintetizados para mostrar el flujo completo sin exponer datos personales reales.
+These files are synthetic and exist to demonstrate the full workflow without exposing real personal data.
 
-Las capturas bancarias reales u originales pueden servir para pruebas locales, pero no forman parte del material publicable del repo.
+Real or original bank screenshots can still be used for local testing, but they are not part of the public portfolio material in this repository.
 
-Si `FINANZAS_demo.xlsx` existe en la carpeta del proyecto, la app lo sugiere por defecto para reducir riesgo de escritura sobre un archivo real.
+If `FINANZAS_demo.xlsx` exists in the project folder, the app selects it by default to reduce the risk of writing into a real workbook.
 
-## Reglas opcionales
+## Optional Local Rules
 
-Para mantener el repo publicable, las reglas sensibles de transferencias internas o compartidas no quedan hardcodeadas en el codigo. Si queres activarlas localmente, podes definir variables de entorno:
+To keep the repository public-safe, sensitive transfer rules are not hardcoded in the codebase. If needed for local usage, they can be configured through environment variables:
 
 - `FINANCE_IMPORTER_SELF_TRANSFER_GROUPS`
 - `FINANCE_IMPORTER_SHARED_TRANSFER_GROUPS`
 
-Formato:
+Format:
 
-- grupos separados por `;`
-- tokens dentro de cada grupo separados por `,`
+- separate rule groups with `;`
+- separate tokens inside each group with `,`
 
-Ejemplo:
+Example:
 
 ```powershell
 $env:FINANCE_IMPORTER_SELF_TRANSFER_GROUPS="cuenta,propia;ahorro,interno"
 $env:FINANCE_IMPORTER_SHARED_TRANSFER_GROUPS="gastos,compartidos;contacto,demo"
 ```
 
-## Regenerar assets demo
+## Regenerate Demo Assets
 
 ```bash
 .\.venv\Scripts\python.exe scripts\generate_demo_assets.py
 ```
 
-Esto recrea:
-- un export demo de Mercado Pago con movimientos de enero y febrero de 2026
-- un `FINANZAS_demo.xlsx` con historico previo para probar importacion, dedupe e insights
+This recreates:
+- a Mercado Pago demo export with January and February 2026 transactions
+- a `FINANZAS_demo.xlsx` workbook with prior history to test import, dedupe, and insights
 
-Para el flujo bancario del README o portfolio, usar capturas de la app basadas en material demo o suficientemente anonimizado.
+For the banking flow in the README or portfolio, use app screenshots generated from demo material or sufficiently anonymized inputs.
 
-## Capturas sugeridas
+## Suggested Screenshots
 
-Las capturas publicables quedan en `docs/screenshots/`:
+Public-ready screenshots live in `docs/screenshots/`:
 - [`01-home.png`](docs/screenshots/01-home.png)
 - [`02-excel-upload.png`](docs/screenshots/02-excel-upload.png)
 - [`03-review-import.png`](docs/screenshots/03-review-import.png)
@@ -110,52 +110,52 @@ Las capturas publicables quedan en `docs/screenshots/`:
 - [`06-month-insights.png`](docs/screenshots/06-month-insights.png)
 - [`07-import-ready.png`](docs/screenshots/07-import-ready.png)
 
-## Vista rapida
+## Quick View
 
 ### Home
 
 ![Home](docs/screenshots/01-home.png)
 
-### Carga desde Excel
+### Excel Upload
 
 ![Excel upload](docs/screenshots/02-excel-upload.png)
 
-### Revision antes de importar
+### Review Before Import
 
 ![Review import](docs/screenshots/03-review-import.png)
 
-### Captura bancaria
+### Bank Capture Editor
 
 ![Bank capture editor](docs/screenshots/04-bank-capture-editor.png)
 
-### KPIs del mes
+### Monthly KPIs
 
 ![Month KPIs](docs/screenshots/05-month-kpis.png)
 
-### Insights mensuales
+### Monthly Insights
 
 ![Month insights](docs/screenshots/06-month-insights.png)
 
-### Confirmacion final
+### Final Confirmation
 
 ![Import ready](docs/screenshots/07-import-ready.png)
 
-## Ejecutar con doble click (Windows)
+## Run on Windows
 
-- `run_app.bat`: inicia la app sin abrir navegador automaticamente
-- `open_app.url`: abre `http://127.0.0.1:8501`
-- para detener la app: cerrar la consola o presionar `Ctrl+C`
+- `run_app.bat`: starts the app without opening the browser automatically
+- `open_app.url`: opens `http://127.0.0.1:8501`
+- to stop the app: close the console window or press `Ctrl+C`
 
-## Importacion
+## Import Behavior
 
-La importacion:
-- detecta la fila de encabezado del export de Mercado Pago
-- convierte los movimientos a un esquema estandar
-- agrega filas nuevas al final de `tblControlIngresosGastos`
-- preserva formato y formula de mes
-- genera backup con nombre `FINANZAS.YYYYMMDD_HHMMSS.bak.xlsx`
+The import flow:
+- detects the header row in the Mercado Pago export
+- converts transactions into a standard schema
+- appends new rows to `tblControlIngresosGastos`
+- preserves formatting and month formulas
+- creates a backup named `FINANZAS.YYYYMMDD_HHMMSS.bak.xlsx`
 
-## Estructura
+## Project Structure
 
 - `app.py`
 - `docs/screenshots/`

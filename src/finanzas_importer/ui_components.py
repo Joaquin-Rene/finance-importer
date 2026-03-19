@@ -888,55 +888,55 @@ def inject_styles() -> None:
 
 def setup_sidebar() -> tuple[str, str, str, bool, float]:
     with st.sidebar:
-        st.markdown("<div class='sidebar-title'>Panel de importacion</div>", unsafe_allow_html=True)
+        st.markdown("<div class='sidebar-title'>Import panel</div>", unsafe_allow_html=True)
         demo_default = (Path.cwd() / "FINANZAS_demo.xlsx").resolve()
         local_default = (Path.cwd() / "FINANZAS.xlsx").resolve()
-        if local_default.exists():
-            default_path = str(local_default)
-        elif demo_default.exists():
+        if demo_default.exists():
             default_path = str(demo_default)
+        elif local_default.exists():
+            default_path = str(local_default)
         else:
             default_path = ""
 
-        st.markdown("<div class='sidebar-section'>Archivo base</div>", unsafe_allow_html=True)
-        st.caption("Ruta destino")
-        finanzas_path = st.text_area("Ruta destino", value=default_path, height=82, label_visibility="collapsed")
+        st.markdown("<div class='sidebar-section'>Destination workbook</div>", unsafe_allow_html=True)
+        st.caption("Destination path")
+        finanzas_path = st.text_area("Destination path", value=default_path, height=82, label_visibility="collapsed")
         if demo_default.exists():
-            st.caption("Se detecto un demo. Queda disponible como alternativa para pruebas.")
+            st.caption("Demo workbook detected. It is selected by default for safer testing.")
 
-        st.markdown("<div class='sidebar-section'>Filtro de fechas</div>", unsafe_allow_html=True)
-        st.caption("Regla de corte")
+        st.markdown("<div class='sidebar-section'>Date filter</div>", unsafe_allow_html=True)
+        st.caption("Cutoff rule")
         date_mode_label = st.selectbox(
-            "Corte por fecha",
+            "Date cutoff",
             options=[
-                "Posteriores a la ultima fecha",
-                "Excluir fechas ya existentes",
+                "Only after latest existing date",
+                "Exclude existing dates",
             ],
             index=0,
             label_visibility="collapsed",
         )
         date_filter_mode = (
             DATE_FILTER_MODE_AFTER_MAX
-            if date_mode_label.startswith("Posteriores")
+            if date_mode_label.startswith("Only after")
             else DATE_FILTER_MODE_SKIP_EXISTING
         )
 
-        st.markdown("<div class='sidebar-section'>Seguridad</div>", unsafe_allow_html=True)
-        st.caption("Se controlan duplicados por referencia y por clave compuesta.")
+        st.markdown("<div class='sidebar-section'>Safety</div>", unsafe_allow_html=True)
+        st.caption("Duplicate checks run by reference and compound key.")
 
-        st.markdown("<div class='sidebar-section'>Categoria por defecto</div>", unsafe_allow_html=True)
-        st.caption("Si no encuentra coincidencia")
+        st.markdown("<div class='sidebar-section'>Fallback category</div>", unsafe_allow_html=True)
+        st.caption("Used when no category rule matches")
         uncategorized_label = st.selectbox(
-            "Categoria si no coincide",
+            "Fallback category",
             options=["Otros", "(vacio)"],
             index=0,
             label_visibility="collapsed",
         )
         default_category = "" if uncategorized_label == "(vacio)" else "Otros"
-        ahorro_meta_pct = st.slider("Meta de ahorro (%)", min_value=0, max_value=40, value=10, step=1)
+        ahorro_meta_pct = st.slider("Savings target (%)", min_value=0, max_value=40, value=10, step=1)
 
-        st.markdown("<div class='sidebar-section'>Detalle tecnico</div>", unsafe_allow_html=True)
-        show_technical = st.toggle("Mostrar informacion tecnica", value=False)
+        st.markdown("<div class='sidebar-section'>Technical details</div>", unsafe_allow_html=True)
+        show_technical = st.toggle("Show technical details", value=False)
     return finanzas_path, date_filter_mode, default_category, show_technical, float(ahorro_meta_pct)
 
 
@@ -946,42 +946,42 @@ def file_size_mb(size_bytes: int) -> str:
 
 def is_path_writable(path_value: str) -> tuple[bool, str]:
     if not path_value.strip():
-        return False, "Defini la ruta del workbook financiero."
+        return False, "Set the destination workbook path."
     path = Path(path_value)
     if not path.exists():
-        return False, "No existe ese archivo en disco."
+        return False, "The file does not exist on disk."
     try:
         with path.open("ab"):
             pass
-        return True, "Archivo disponible para escribir."
+        return True, "Workbook is writable."
     except PermissionError:
-        return False, "Archivo bloqueado. Cerra Excel o Drive sincronizando."
+        return False, "Workbook is locked. Close Excel or let sync finish."
     except OSError:
-        return False, "No se pudo validar permisos de escritura."
+        return False, "Could not validate write permissions."
 
 
 def render_hero(finanzas_ok: bool, finanzas_msg: str) -> None:
     status_class = "status-ok" if finanzas_ok else "status-bad"
-    status_text = "Workbook listo" if finanzas_ok else "Revisar workbook"
+    status_text = "Workbook ready" if finanzas_ok else "Review workbook"
     st.markdown(
         f"""
         <section class="hero">
             <div class="hero-grid">
                 <div>
-                    <div class="hero-kicker">Importacion de movimientos</div>
+                    <div class="hero-kicker">Transaction intake</div>
                     <h1>Financial Operations Importer</h1>
                     <div class="hero-copy">
-                        Carga movimientos desde un Excel o una captura, revisa duplicados y confirma la actualizacion
-                        solo cuando el resultado ya esta claro.
+                        Load transactions from Excel exports or bank captures, review duplicates, and confirm the update
+                        only when the outcome is already clear.
                     </div>
                     <div class="hero-list">
-                        <span class="hero-chip">Revision previa</span>
-                        <span class="hero-chip">Respaldo automatico</span>
-                        <span class="hero-chip">Lectura mensual</span>
+                        <span class="hero-chip">Pre-import review</span>
+                        <span class="hero-chip">Automatic backup</span>
+                        <span class="hero-chip">Monthly insights</span>
                     </div>
                 </div>
                 <div class="hero-panel">
-                    <div class="hero-panel-label">Estado del archivo</div>
+                    <div class="hero-panel-label">Workbook status</div>
                     <div class="hero-panel-status">{status_text}</div>
                     <div class="hero-panel-copy">{finanzas_msg}</div>
                     <span class="status-pill {status_class}">{status_text}</span>
@@ -994,14 +994,14 @@ def render_hero(finanzas_ok: bool, finanzas_msg: str) -> None:
 
 
 def render_mode_panel(mode: str) -> None:
-    if mode == "Archivo Excel":
-        title = "Archivo Excel"
-        copy = "Importa movimientos desde un Excel. El flujo actual esta optimizado para exportes de Mercado Pago."
-        tags = ["Gastos e ingresos", "Revision previa", "Importacion segura"]
+    if mode == "Excel file":
+        title = "Excel file"
+        copy = "Import transactions from an Excel export. The current parser is optimized for Mercado Pago exports."
+        tags = ["Transactions", "Review step", "Safe import"]
     else:
-        title = "Captura bancaria"
-        copy = "Flujo asistido con OCR y edicion manual para registrar movimientos desde una captura."
-        tags = ["OCR asistido", "Edicion manual", "Carga por lote"]
+        title = "Bank capture"
+        copy = "OCR-assisted flow with manual editing to register movements from a bank screenshot."
+        tags = ["OCR assisted", "Manual editing", "Batch intake"]
 
     tags_html = "".join(f"<span class='hero-chip'>{tag}</span>" for tag in tags)
     st.markdown(
@@ -1019,13 +1019,13 @@ def render_mode_panel(mode: str) -> None:
 def format_preview_df(df: pd.DataFrame) -> pd.DataFrame:
     preview = df.copy()
     if "tipo" in preview.columns:
-        preview["tipo_visual"] = preview["tipo"].map(_preview_tipo).fillna("Gasto")
+        preview["tipo_visual"] = preview["tipo"].map(_preview_tipo).fillna("Expense")
     if "compartido" in preview.columns:
         preview["compartido"] = (
             preview["compartido"]
-            .map({True: "Si", False: "No"})
+            .map({True: "Yes", False: "No"})
             .fillna(preview["compartido"])
-            .replace({"S?": "Si", "SI": "Si", "NO": "No", "": "No"})
+            .replace({"S?": "Yes", "SI": "Yes", "NO": "No", "": "No"})
         )
     return preview
 
@@ -1116,12 +1116,12 @@ def _metric_delta(value: float, improve_when_down: bool = False) -> tuple[str, s
 
 
 def _preview_tipo(value: object) -> str:
-    return "Ingreso" if str(value).strip().lower() == "ingreso" else "Gasto"
+    return "Income" if str(value).strip().lower() == "ingreso" else "Expense"
 
 
 def render_preview_table(df: pd.DataFrame, columns: list[str], labels: dict[str, str]) -> None:
     if df.empty:
-        st.info("No hay filas para mostrar.")
+        st.info("There are no rows to display.")
         return
 
     def format_cell(column: str, value: object) -> str:
@@ -1212,13 +1212,13 @@ def render_review_step(
     dupes_key = int(plan.duplicate_compound_df.shape[0]) if plan else 0
     to_import = int(plan.to_import_df.shape[0]) if plan else total_rows
 
-    render_step_title(2, "Revisar antes de importar")
+    render_step_title(2, "Review before import")
     st.markdown(
         """
         <div style="margin:0.2rem 0 1rem; padding:1rem 1.15rem; border-radius:20px; border:1px solid rgba(36,50,74,0.95); background:linear-gradient(180deg, rgba(18,26,43,0.94) 0%, rgba(15,22,39,0.98) 100%); box-shadow:0 16px 36px rgba(2,6,23,0.3);">
             <div style="font-size:0.8rem; letter-spacing:0.12em; text-transform:uppercase; color:#22d3ee; font-weight:800; margin-bottom:0.3rem;">Control de calidad</div>
             <div style="color:#94a3b8; line-height:1.55; font-size:0.94rem;">
-                Este bloque resume detecciones, filtros y duplicados para que la decision de importar sea evidente de un vistazo.
+                This block summarizes detections, filters, and duplicates so the import decision is obvious at a glance.
             </div>
         </div>
         """,
@@ -1226,120 +1226,120 @@ def render_review_step(
     )
 
     metric_cols = st.columns(5)
-    metric_cols[0].metric("Detectados", f"{total_rows}")
-    metric_cols[1].metric("Saltados por fecha", f"{skipped_by_date}")
-    metric_cols[2].metric("Duplicados", f"{dupes_ref + dupes_key}")
-    metric_cols[3].metric("Marcados compartidos", f"{marked_shared_transfers}")
-    metric_cols[4].metric("A importar", f"{to_import}")
+    metric_cols[0].metric("Detected", f"{total_rows}")
+    metric_cols[1].metric("Skipped by date", f"{skipped_by_date}")
+    metric_cols[2].metric("Duplicates", f"{dupes_ref + dupes_key}")
+    metric_cols[3].metric("Flagged shared", f"{marked_shared_transfers}")
+    metric_cols[4].metric("To import", f"{to_import}")
 
     hidden_filters = filtered_rendimientos + filtered_self_transfer + dupes_ref + dupes_key
     st.caption(
-        "La vista principal deja solo los indicadores mas utiles para decidir rapido. "
-        f"En auditoria quedan {hidden_filters} registros tecnicos entre filtros y duplicados."
+        "The main view keeps only the most useful indicators for a fast decision. "
+        f"The audit trail still holds {hidden_filters} technical records across filters and duplicates."
     )
 
     if to_import == 0:
         st.markdown(
-            "<div style='padding:1rem 1.1rem; margin:0.8rem 0 1rem; border-radius:18px; border:1px solid rgba(34,197,94,0.22); background:linear-gradient(180deg, rgba(6,78,59,0.34) 0%, rgba(18,26,43,0.96) 100%); color:#dcfce7; box-shadow:0 14px 30px rgba(2,6,23,0.24);'><strong>Todo al dia.</strong> No hay filas nuevas para importar con las reglas actuales.</div>",
+            "<div style='padding:1rem 1.1rem; margin:0.8rem 0 1rem; border-radius:18px; border:1px solid rgba(34,197,94,0.22); background:linear-gradient(180deg, rgba(6,78,59,0.34) 0%, rgba(18,26,43,0.96) 100%); color:#dcfce7; box-shadow:0 14px 30px rgba(2,6,23,0.24);'><strong>Up to date.</strong> There are no new rows to import with the current rules.</div>",
             unsafe_allow_html=True,
         )
     else:
         st.markdown(
-            f"<div style='padding:1rem 1.1rem; margin:0.8rem 0 1rem; border-radius:18px; border:1px solid rgba(34,211,238,0.24); background:linear-gradient(180deg, rgba(109,94,245,0.16) 0%, rgba(18,26,43,0.96) 100%); color:#e0f2fe; box-shadow:0 14px 30px rgba(2,6,23,0.24);'><strong>Listo para importar.</strong> Se agregaran {to_import} filas nuevas luego de pasar los filtros de seguridad.</div>",
+            f"<div style='padding:1rem 1.1rem; margin:0.8rem 0 1rem; border-radius:18px; border:1px solid rgba(34,211,238,0.24); background:linear-gradient(180deg, rgba(109,94,245,0.16) 0%, rgba(18,26,43,0.96) 100%); color:#e0f2fe; box-shadow:0 14px 30px rgba(2,6,23,0.24);'><strong>Ready to import.</strong> {to_import} new rows will be added after the safety filters pass.</div>",
             unsafe_allow_html=True,
         )
 
     preview_df = plan.to_import_df if plan is not None and not plan.to_import_df.empty else parsed_df
     preview_df = format_preview_df(preview_df)
     if preview_df.shape[0] > 50:
-        st.caption("Mostrando primeras 50 filas para mantener la app agil.")
+        st.caption("Showing the first 50 rows to keep the app responsive.")
     st.markdown("#### Preview")
     render_preview_table(
         preview_df.head(50),
         ["date", "tipo_visual", "categoria", "descripcion", "monto", "compartido"],
         {
-            "date": "Fecha",
-            "tipo_visual": "Tipo",
-            "categoria": "Categoria",
-            "descripcion": "Descripcion",
-            "monto": "Monto",
-            "compartido": "Compartido",
+            "date": "Date",
+            "tipo_visual": "Type",
+            "categoria": "Category",
+            "descripcion": "Description",
+            "monto": "Amount",
+            "compartido": "Shared",
         },
     )
 
-    show_audit = st.toggle("Ver auditoria", value=False)
+    show_audit = st.toggle("Show audit trail", value=False)
     if show_audit:
         audit_cols = st.columns(4)
-        audit_cols[0].metric("Rendimientos filtrados", f"{filtered_rendimientos}")
-        audit_cols[1].metric("Transferencias propias", f"{filtered_self_transfer}")
-        audit_cols[2].metric("Duplicados por ref", f"{dupes_ref}")
-        audit_cols[3].metric("Duplicados por clave", f"{dupes_key}")
+        audit_cols[0].metric("Filtered earnings", f"{filtered_rendimientos}")
+        audit_cols[1].metric("Own transfers", f"{filtered_self_transfer}")
+        audit_cols[2].metric("Duplicate refs", f"{dupes_ref}")
+        audit_cols[3].metric("Duplicate keys", f"{dupes_key}")
 
-        with st.expander("Detalle: filas a importar", expanded=False):
+        with st.expander("Detail: rows to import", expanded=False):
             if plan is not None and not plan.to_import_df.empty:
                 render_preview_table(
                     format_preview_df(plan.to_import_df).head(50),
                     ["date", "tipo_visual", "categoria", "descripcion", "monto", "compartido", "mp_ref"],
                     {
-                        "date": "Fecha",
-                        "tipo_visual": "Tipo",
-                        "categoria": "Categoria",
-                        "descripcion": "Descripcion",
-                        "monto": "Monto",
-                        "compartido": "Compartido",
-                        "mp_ref": "Referencia",
+                        "date": "Date",
+                        "tipo_visual": "Type",
+                        "categoria": "Category",
+                        "descripcion": "Description",
+                        "monto": "Amount",
+                        "compartido": "Shared",
+                        "mp_ref": "Reference",
                     },
                 )
             else:
-                st.info("No hay filas listas para importar.")
+                st.info("There are no rows ready to import.")
 
-        with st.expander("Detalle: saltadas por fecha", expanded=False):
+        with st.expander("Detail: skipped by date", expanded=False):
             if plan is not None and not plan.filtered_by_date_df.empty:
                 render_preview_table(
                     format_preview_df(plan.filtered_by_date_df).head(50),
                     ["date", "tipo_visual", "descripcion", "monto", "mp_ref"],
                     {
-                        "date": "Fecha",
-                        "tipo_visual": "Tipo",
-                        "descripcion": "Descripcion",
-                        "monto": "Monto",
-                        "mp_ref": "Referencia",
+                        "date": "Date",
+                        "tipo_visual": "Type",
+                        "descripcion": "Description",
+                        "monto": "Amount",
+                        "mp_ref": "Reference",
                     },
                 )
             else:
-                st.info("No hubo filas saltadas por fecha.")
+                st.info("There were no rows skipped by date.")
 
-        with st.expander("Detalle: self-transfer excluidas", expanded=False):
+        with st.expander("Detail: excluded self-transfers", expanded=False):
             if parse_result.self_transfer_examples is not None and not parse_result.self_transfer_examples.empty:
                 render_preview_table(
                     format_preview_df(parse_result.self_transfer_examples).head(50),
                     ["date", "tipo_visual", "descripcion", "monto", "mp_ref"],
                     {
-                        "date": "Fecha",
-                        "tipo_visual": "Tipo",
-                        "descripcion": "Descripcion",
-                        "monto": "Monto",
-                        "mp_ref": "Referencia",
+                        "date": "Date",
+                        "tipo_visual": "Type",
+                        "descripcion": "Description",
+                        "monto": "Amount",
+                        "mp_ref": "Reference",
                     },
                 )
             else:
-                st.info("No hubo transferencias internas excluidas.")
+                st.info("There were no excluded internal transfers.")
 
     if show_technical:
-        st.markdown("#### Detalle tecnico")
+        st.markdown("#### Technical details")
         mode_caption = (
-            "Solo importar > ultima fecha" if date_filter_mode == DATE_FILTER_MODE_AFTER_MAX else "No importar fechas ya existentes"
+            "Only import > latest date" if date_filter_mode == DATE_FILTER_MODE_AFTER_MAX else "Exclude existing dates"
         )
-        st.caption(f"Modo de fecha: `{mode_caption}`")
-        st.caption(f"Columna de fecha usada en parseo: `{parse_result.date_source_column}`")
+        st.caption(f"Date mode: `{mode_caption}`")
+        st.caption(f"Parser date column: `{parse_result.date_source_column}`")
         if plan is not None:
-            st.caption(f"Tabla detectada en el workbook: `{plan.table_name}`")
+            st.caption(f"Detected workbook table: `{plan.table_name}`")
         if plan_error:
-            st.error(f"No se pudo validar duplicados contra el workbook: {plan_error}")
+            st.error(f"Could not validate duplicates against the workbook: {plan_error}")
 
-        with st.expander("Tecnico: reglas de categoria", expanded=False):
+        with st.expander("Technical: category rules", expanded=False):
             rules_summary = (
-                parsed_df["regla_categoria"].value_counts(dropna=False).rename_axis("regla_categoria").reset_index(name="cantidad")
+                parsed_df["regla_categoria"].value_counts(dropna=False).rename_axis("regla_categoria").reset_index(name="count")
             )
             st.dataframe(rules_summary, hide_index=True, width="stretch")
             rules_examples = parsed_df.sort_values(["regla_categoria", "date"]).groupby("regla_categoria", as_index=False).head(5)
@@ -1361,17 +1361,17 @@ def render_insights_step(
     executive_summary: str = "",
     ahorro_meta_pct: float = 10.0,
 ) -> None:
-    render_step_title(3, "Lectura rapida del mes")
+    render_step_title(3, "Monthly snapshot")
     if analytics_df.empty or kpis is None:
-        st.info("No hay suficiente historico para mostrar insights del mes.")
+        st.info("There is not enough historical data to show monthly insights.")
         return
 
     ref = ref_date if ref_date is not None else analytics_df["date"].max()
     st.markdown(
         f"""
         <div style="margin:0.2rem 0 1rem; padding:1rem 1.15rem; border-radius:20px; border:1px solid rgba(36,50,74,0.95); background:linear-gradient(180deg, rgba(18,26,43,0.94) 0%, rgba(15,22,39,0.98) 100%); box-shadow:0 16px 36px rgba(2,6,23,0.3);">
-            <div style="font-size:0.8rem; letter-spacing:0.12em; text-transform:uppercase; color:#22d3ee; font-weight:800; margin-bottom:0.3rem;">Periodo analizado</div>
-            <div style="color:#94a3b8; line-height:1.55; font-size:0.94rem;">{ref.strftime('%m/%Y')} | Lectura ejecutiva del mes actual contra historico reciente.</div>
+            <div style="font-size:0.8rem; letter-spacing:0.12em; text-transform:uppercase; color:#22d3ee; font-weight:800; margin-bottom:0.3rem;">Analysis period</div>
+            <div style="color:#94a3b8; line-height:1.55; font-size:0.94rem;">{ref.strftime('%m/%Y')} | Executive view of the current month against recent history.</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1380,18 +1380,18 @@ def render_insights_step(
         st.info(executive_summary)
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Ingresos mes", _money(kpis.ingresos))
+    c1.metric("Monthly income", _money(kpis.ingresos))
     gasto_delta, gasto_delta_color = _metric_delta(kpis.delta_gasto_prev, improve_when_down=True)
     balance_delta, balance_delta_color = _metric_delta(kpis.delta_balance_prev)
     balance_avg_delta, balance_avg_delta_color = _metric_delta(kpis.delta_balance_avg3)
-    c2.metric("Gastos mes", _money(kpis.gastos), delta=gasto_delta, delta_color=gasto_delta_color)
-    c3.metric("Balance mes", _money(kpis.balance), delta=balance_delta, delta_color=balance_delta_color)
-    c4.metric("Ahorro %", f"{kpis.ahorro_pct:.1f}%")
+    c2.metric("Monthly expense", _money(kpis.gastos), delta=gasto_delta, delta_color=gasto_delta_color)
+    c3.metric("Monthly balance", _money(kpis.balance), delta=balance_delta, delta_color=balance_delta_color)
+    c4.metric("Savings %", f"{kpis.ahorro_pct:.1f}%")
 
     c5, c6, c7 = st.columns(3)
-    c5.metric("Gasto fijo aprox", _money(kpis.gasto_fijo_aprox))
-    c6.metric("Gasto variable aprox", _money(kpis.gasto_variable_aprox))
-    c7.metric("Balance vs promedio 3m", _money(kpis.balance), delta=balance_avg_delta, delta_color=balance_avg_delta_color)
+    c5.metric("Estimated fixed spend", _money(kpis.gasto_fijo_aprox))
+    c6.metric("Estimated variable spend", _money(kpis.gasto_variable_aprox))
+    c7.metric("Balance vs 3m average", _money(kpis.balance), delta=balance_avg_delta, delta_color=balance_avg_delta_color)
 
     month_df = analytics_df[
         (analytics_df["date"].dt.year == ref.year)
@@ -1425,14 +1425,14 @@ def render_insights_step(
         alt.Chart(day_agg)
         .mark_line(point=alt.OverlayMarkDef(size=72, filled=True), color="#2dd4bf", strokeWidth=3)
         .encode(
-            x=alt.X("day:Q", title="Dia del mes", axis=alt.Axis(format="d")),
-            y=alt.Y("balance_acum:Q", title="Balance acumulado", axis=alt.Axis(format=",.0f")),
+            x=alt.X("day:Q", title="Day of month", axis=alt.Axis(format="d")),
+            y=alt.Y("balance_acum:Q", title="Cumulative balance", axis=alt.Axis(format=",.0f")),
             tooltip=[
-                alt.Tooltip("day:Q", title="Dia"),
-                alt.Tooltip("balance_acum:Q", title="Balance acumulado", format=",.2f"),
+                alt.Tooltip("day:Q", title="Day"),
+                alt.Tooltip("balance_acum:Q", title="Cumulative balance", format=",.2f"),
             ],
         )
-        .properties(height=290, title="Evolucion diaria acumulada")
+        .properties(height=290, title="Cumulative daily trend")
         .configure(**chart_theme)
     )
 
@@ -1468,32 +1468,32 @@ def render_insights_step(
         .mark_bar(cornerRadiusTopRight=8, cornerRadiusBottomRight=8)
         .encode(
             x=alt.X("gasto:Q", title="ARS", axis=alt.Axis(format=",.0f")),
-            y=alt.Y("categoria:N", sort="-x", title="Categoria"),
+            y=alt.Y("categoria:N", sort="-x", title="Category"),
             color=alt.Color("periodo:N", scale=alt.Scale(range=["#2dd4bf", "#38bdf8"])),
             opacity=alt.Opacity("periodo:N", scale=alt.Scale(range=[1.0, 0.55])),
             xOffset="periodo:N",
             tooltip=[
-                alt.Tooltip("categoria:N", title="Categoria"),
-                alt.Tooltip("periodo:N", title="Periodo"),
-                alt.Tooltip("gasto:Q", title="Gasto", format=",.2f"),
+                alt.Tooltip("categoria:N", title="Category"),
+                alt.Tooltip("periodo:N", title="Period"),
+                alt.Tooltip("gasto:Q", title="Spend", format=",.2f"),
             ],
         )
-        .properties(height=290, title="Categorias: mes actual vs anterior")
+        .properties(height=290, title="Categories: current month vs previous month")
         .configure(**chart_theme)
     )
 
     weekday_df = month_df[month_df["signed_monto"] < 0].copy()
     day_map = {
-        "Monday": "Lunes",
-        "Tuesday": "Martes",
-        "Wednesday": "Miercoles",
-        "Thursday": "Jueves",
-        "Friday": "Viernes",
-        "Saturday": "Sabado",
-        "Sunday": "Domingo",
+        "Monday": "Monday",
+        "Tuesday": "Tuesday",
+        "Wednesday": "Wednesday",
+        "Thursday": "Thursday",
+        "Friday": "Friday",
+        "Saturday": "Saturday",
+        "Sunday": "Sunday",
     }
     weekday_df["weekday"] = weekday_df["date"].dt.day_name().map(day_map)
-    order = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"]
+    order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     weekday_df["weekday"] = pd.Categorical(weekday_df["weekday"], categories=order, ordered=True)
     weekday_df = weekday_df.groupby("weekday", as_index=False)["signed_monto"].sum()
     weekday_df["gasto"] = weekday_df["signed_monto"].abs()
@@ -1501,19 +1501,19 @@ def render_insights_step(
         x=alt.X(
             "weekday:N",
             sort=order,
-            title="Dia de semana",
+            title="Weekday",
             axis=alt.Axis(labelAngle=0, labelPadding=10),
         ),
-        y=alt.Y("gasto:Q", title="Gasto total", axis=alt.Axis(format=",.0f")),
+        y=alt.Y("gasto:Q", title="Total spend", axis=alt.Axis(format=",.0f")),
         tooltip=[
-            alt.Tooltip("weekday:N", title="Dia"),
-            alt.Tooltip("gasto:Q", title="Gasto total", format=",.2f"),
+            alt.Tooltip("weekday:N", title="Weekday"),
+            alt.Tooltip("gasto:Q", title="Total spend", format=",.2f"),
         ],
     )
     weekday_area = weekday_base.mark_area(color="#0ea5a4", opacity=0.18, interpolate="monotone")
     weekday_line = weekday_base.mark_line(color="#67e8f9", strokeWidth=3, interpolate="monotone")
     weekday_points = weekday_base.mark_circle(color="#67e8f9", size=88)
-    weekday_chart = (weekday_area + weekday_line + weekday_points).properties(height=240, title="Ritmo de gasto semanal").configure(
+    weekday_chart = (weekday_area + weekday_line + weekday_points).properties(height=240, title="Weekly spending rhythm").configure(
         **chart_theme
     )
 
@@ -1523,22 +1523,22 @@ def render_insights_step(
     st.altair_chart(weekday_chart, width="stretch")
 
     if projection is not None:
-        st.markdown("#### Semaforo mensual")
+        st.markdown("#### Monthly signal")
         if projection["balance_proyectado"] < 0:
-            st.error("Critico: con el ritmo actual el cierre proyectado es negativo.")
+            st.error("Critical: at the current pace, the projected closing balance is negative.")
         elif kpis.ahorro_pct < ahorro_meta_pct:
-            st.warning(f"Alerta: el ahorro del mes va por debajo del {ahorro_meta_pct:.0f}%.")
+            st.warning(f"Alert: monthly savings are running below {ahorro_meta_pct:.0f}%.")
         else:
-            st.success("Bien: proyeccion saludable y ahorro dentro de objetivo.")
+            st.success("Healthy projection: savings are within target.")
 
     if projection is not None:
-        st.markdown("#### Proyeccion de cierre")
+        st.markdown("#### Closing projection")
         p1, p2, p3 = st.columns(3)
-        p1.metric("Ingreso proyectado", _money(projection["ingreso_proyectado"]))
-        p2.metric("Gasto proyectado", _money(projection["gasto_proyectado"]))
-        p3.metric("Balance proyectado", _money(projection["balance_proyectado"]))
+        p1.metric("Projected income", _money(projection["ingreso_proyectado"]))
+        p2.metric("Projected spend", _money(projection["gasto_proyectado"]))
+        p3.metric("Projected balance", _money(projection["balance_proyectado"]))
 
-    st.markdown("#### Alertas accionables")
+    st.markdown("#### Actionable alerts")
     for alert in alerts:
         _render_alert_card(alert.level, alert.title, alert.detail, alert.action)
 
@@ -1552,13 +1552,13 @@ def render_import_step(
     default_category: str,
     importer_fn: Callable[..., object],
 ) -> None:
-    render_step_title(4, "Actualizar workbook")
+    render_step_title(4, "Update workbook")
     st.markdown(
         """
         <div style="margin:0.2rem 0 1rem; padding:1rem 1.15rem; border-radius:20px; border:1px solid rgba(36,50,74,0.95); background:linear-gradient(180deg, rgba(18,26,43,0.94) 0%, rgba(15,22,39,0.98) 100%); box-shadow:0 16px 36px rgba(2,6,23,0.3);">
             <div style="font-size:0.8rem; letter-spacing:0.12em; text-transform:uppercase; color:#22d3ee; font-weight:800; margin-bottom:0.3rem;">Ultimo control</div>
             <div style="color:#94a3b8; line-height:1.55; font-size:0.94rem;">
-                La escritura queda bloqueada hasta confirmar que entendiste el impacto. Si no hay filas nuevas, se mantiene la proteccion por defecto.
+                Writing stays locked until you confirm the impact. If there are no new rows, the default protection remains in place.
             </div>
         </div>
         """,
@@ -1567,13 +1567,13 @@ def render_import_step(
 
     importar_igual = False
     if parse_result.suspicious_dates:
-        st.warning("Las fechas del archivo parecen inusuales. Revisalas antes de continuar para evitar importaciones incorrectas.")
-        importar_igual = st.checkbox("Confirmo que las fechas son correctas", value=False)
+        st.warning("The file dates look unusual. Review them before continuing to avoid incorrect imports.")
+        importar_igual = st.checkbox("I confirm the dates are correct", value=False)
 
     force_write = False
     if to_import_final == 0:
-        force_write = st.checkbox("Forzar escritura aunque no haya filas nuevas", value=False)
-    confirm_import = st.checkbox("Entiendo que se modificara el workbook destino", value=False)
+        force_write = st.checkbox("Force write even if there are no new rows", value=False)
+    confirm_import = st.checkbox("I understand the destination workbook will be modified", value=False)
 
     disable_import = (
         parsed_df is None
@@ -1582,15 +1582,15 @@ def render_import_step(
         or not confirm_import
     )
     if disable_import:
-        st.caption("El boton se habilita al confirmar la escritura y cumplir las validaciones de seguridad.")
+        st.caption("The button becomes available after confirming the write and passing the safety checks.")
 
     if st.button("Importar", type="primary", disabled=disable_import):
         if parsed_df is None:
-            st.warning("Primero subi un archivo para importar.")
+            st.warning("Upload a file before importing.")
         elif parse_result.suspicious_dates and not importar_igual:
-            st.warning("Confirma fechas para continuar.")
+            st.warning("Confirm the dates to continue.")
         elif not finanzas_path.strip():
-            st.warning("Completa la ruta del workbook destino.")
+            st.warning("Complete the destination workbook path.")
         else:
             try:
                 result = importer_fn(
@@ -1600,21 +1600,21 @@ def render_import_step(
                     default_category=default_category,
                 )
                 if result.note == "No rows to import":
-                    st.info("No hay filas nuevas para importar. El workbook quedo sin cambios.")
+                    st.info("There are no new rows to import. The workbook was left unchanged.")
                     st.stop()
                 st.success(
-                    "Importacion completada: "
-                    f"{result.added_rows} agregadas, "
-                    f"{result.skipped_rows_by_date} saltadas por fecha, "
-                    f"{result.duplicate_rows_mp_ref} duplicadas por referencia, "
-                    f"{result.duplicate_rows_compound_key} duplicadas por clave."
+                    "Import completed: "
+                    f"{result.added_rows} added, "
+                    f"{result.skipped_rows_by_date} skipped by date, "
+                    f"{result.duplicate_rows_mp_ref} duplicate references, "
+                    f"{result.duplicate_rows_compound_key} duplicate compound keys."
                 )
                 if result.backup_path is not None:
-                    st.info("Backup generado:")
+                    st.info("Backup created:")
                     st.code(str(result.backup_path))
             except PermissionError:
                 st.error(
-                    "No se pudo guardar el workbook. Cerra el archivo en Excel y, si esta sincronizado en la nube, marca 'Disponible sin conexion'."
+                    "The workbook could not be saved. Close it in Excel and, if it is cloud-synced, mark it as available offline."
                 )
             except Exception as exc:
-                st.error(f"Ocurrio un error importando al workbook destino: {exc}")
+                st.error(f"An error occurred while importing into the destination workbook: {exc}")

@@ -94,36 +94,36 @@ def _render_bna_manual_editor(seed_df: pd.DataFrame) -> pd.DataFrame:
     with st.container(border=True):
         st.markdown("<div class='manual-editor-scope'></div>", unsafe_allow_html=True)
         st.markdown(
-            "<div class='manual-editor-kicker'>Tabla editable</div>"
-            "<div class='manual-editor-intro'>Corrige o completa cada movimiento antes de importarlo.</div>",
+            "<div class='manual-editor-kicker'>Editable table</div>"
+            "<div class='manual-editor-intro'>Review or complete each transaction before importing it.</div>",
             unsafe_allow_html=True,
         )
         header_cols = st.columns([1.1, 2.9, 1.2, 1.0, 0.9])
-        header_cols[0].markdown("<div class='manual-editor-head'>Fecha</div>", unsafe_allow_html=True)
-        header_cols[1].markdown("<div class='manual-editor-head'>Descripcion</div>", unsafe_allow_html=True)
-        header_cols[2].markdown("<div class='manual-editor-head'>Monto</div>", unsafe_allow_html=True)
-        header_cols[3].markdown("<div class='manual-editor-head'>Tipo</div>", unsafe_allow_html=True)
-        header_cols[4].markdown("<div class='manual-editor-head'>Accion</div>", unsafe_allow_html=True)
+        header_cols[0].markdown("<div class='manual-editor-head'>Date</div>", unsafe_allow_html=True)
+        header_cols[1].markdown("<div class='manual-editor-head'>Description</div>", unsafe_allow_html=True)
+        header_cols[2].markdown("<div class='manual-editor-head'>Amount</div>", unsafe_allow_html=True)
+        header_cols[3].markdown("<div class='manual-editor-head'>Type</div>", unsafe_allow_html=True)
+        header_cols[4].markdown("<div class='manual-editor-head'>Action</div>", unsafe_allow_html=True)
 
         for idx, row in enumerate(rows):
             st.markdown("<div class='manual-editor-row'></div>", unsafe_allow_html=True)
             cols = st.columns([1.1, 2.9, 1.2, 1.0, 0.9])
             fecha = cols[0].text_input(
-                f"Fecha {idx + 1}",
+                f"Date {idx + 1}",
                 value=str(row.get("fecha", "")),
                 key=f"bna_fecha_{idx}",
                 label_visibility="collapsed",
                 placeholder="dd/mm",
             )
             descripcion = cols[1].text_input(
-                f"Descripcion {idx + 1}",
+                f"Description {idx + 1}",
                 value=str(row.get("descripcion", "")),
                 key=f"bna_desc_{idx}",
                 label_visibility="collapsed",
-                placeholder="Descripcion",
+                placeholder="Description",
             )
             monto = cols[2].text_input(
-                f"Monto {idx + 1}",
+                f"Amount {idx + 1}",
                 value=str(row.get("monto", "")),
                 key=f"bna_monto_{idx}",
                 label_visibility="collapsed",
@@ -139,16 +139,16 @@ def _render_bna_manual_editor(seed_df: pd.DataFrame) -> pd.DataFrame:
                 f"<div class='manual-type-chip {tipo_class}'><span class='tipo-dot'>&#9679;</span>{tipo}</div>",
                 unsafe_allow_html=True,
             )
-            if cols[4].button("Quitar", key=f"bna_remove_{idx}", use_container_width=True):
+            if cols[4].button("Remove", key=f"bna_remove_{idx}", use_container_width=True):
                 remove_idx = idx
             updated_rows.append({"fecha": fecha, "descripcion": descripcion, "monto": monto})
 
         action_cols = st.columns([1.1, 1.1, 3.8])
-        if action_cols[0].button("Agregar fila", key="bna_add_row", use_container_width=True):
+        if action_cols[0].button("Add row", key="bna_add_row", use_container_width=True):
             updated_rows.append({"fecha": "", "descripcion": "", "monto": ""})
             st.session_state.bna_manual_rows = updated_rows
             st.rerun()
-        if action_cols[1].button("Restaurar OCR", key="bna_restore_seed", use_container_width=True):
+        if action_cols[1].button("Restore OCR", key="bna_restore_seed", use_container_width=True):
             st.session_state.bna_manual_rows = _serialize_bna_seed(seed_df)
             st.rerun()
 
@@ -170,35 +170,35 @@ finanzas_ok, finanzas_msg = is_path_writable(finanzas_path)
 render_hero(finanzas_ok, finanzas_msg)
 
 if "import_mode" not in st.session_state:
-    st.session_state.import_mode = "Archivo Excel"
+    st.session_state.import_mode = "Excel file"
 
 mode_cols = st.columns(2)
 with mode_cols[0]:
-    if st.button("Archivo Excel", type="primary" if st.session_state.import_mode == "Archivo Excel" else "secondary", width="stretch"):
-        st.session_state.import_mode = "Archivo Excel"
+    if st.button("Excel file", type="primary" if st.session_state.import_mode == "Excel file" else "secondary", width="stretch"):
+        st.session_state.import_mode = "Excel file"
 with mode_cols[1]:
-    if st.button("Captura bancaria", type="primary" if st.session_state.import_mode == "Captura bancaria" else "secondary", width="stretch"):
-        st.session_state.import_mode = "Captura bancaria"
+    if st.button("Bank capture", type="primary" if st.session_state.import_mode == "Bank capture" else "secondary", width="stretch"):
+        st.session_state.import_mode = "Bank capture"
 
 mode = st.session_state.import_mode
 render_mode_panel(mode)
 
 init_upload_state()
 
-if mode == "Archivo Excel":
-    render_step_title(1, "Cargar archivo de gastos e ingresos")
+if mode == "Excel file":
+    render_step_title(1, "Load transaction file")
     st.markdown(
-        "<div class='subtle'>Subi un archivo .xlsx o .xls para revisarlo antes de importar. Hoy el parseo esta preparado para exportes de Mercado Pago.</div>",
+        "<div class='subtle'>Upload a .xlsx or .xls file to review it before importing. The current parser is optimized for Mercado Pago exports.</div>",
         unsafe_allow_html=True,
     )
     render_upload_dropzone_hint()
 
     source_bytes: bytes | None = None
     uploaded_file = st.file_uploader(
-        "Arrastra y suelta el archivo de movimientos aqui (.xlsx o .xls), o usa Browse files",
+        "Drag and drop the transaction file here (.xlsx or .xls), or use Browse files",
         type=["xlsx", "xls"],
         key=st.session_state.uploader_key,
-        help="Si no toma el arrastre, soltalo dentro del recuadro punteado del uploader.",
+        help="If drag and drop does not work, drop the file inside the dotted uploader area.",
     )
 
     if uploaded_file is not None and st.session_state.upload_at is None:
@@ -209,22 +209,22 @@ if mode == "Archivo Excel":
     if uploaded_file is not None:
         render_upload_meta(uploaded_file)
     else:
-        st.markdown("**Alternativa:** cargar desde ruta local (si el drag del navegador falla).")
+        st.markdown("**Alternative:** load from a local path if browser drag and drop fails.")
         local_path = st.text_input(
-            "Ruta del archivo de movimientos",
+            "Transaction file path",
             value=str((Path.home() / "Downloads").resolve()),
-            help="Pega la ruta completa del archivo .xlsx/.xls.",
+            help="Paste the full path to the .xlsx or .xls file.",
         )
-        if st.button("Cargar archivo desde ruta"):
+        if st.button("Load file from path"):
             local_file = Path(local_path.strip().strip('"'))
             if not local_file.exists() or not local_file.is_file():
-                st.error("La ruta no existe o no es un archivo.")
+                st.error("The path does not exist or is not a file.")
             elif local_file.suffix.lower() not in {".xlsx", ".xls"}:
-                st.error("El archivo debe ser .xlsx o .xls.")
+                st.error("The file must be .xlsx or .xls.")
             else:
                 source_bytes = local_file.read_bytes()
                 st.session_state.upload_at = pd.Timestamp.now().to_pydatetime()
-                st.success(f"Archivo cargado desde ruta: {local_file.name}")
+                st.success(f"File loaded from path: {local_file.name}")
 
     parse_result: ParseResult | None = None
     parsed_df: pd.DataFrame | None = None
@@ -243,7 +243,7 @@ if mode == "Archivo Excel":
                 except Exception as exc:
                     plan_error = str(exc)
             elif finanzas_path.strip():
-                st.warning(f"No encontramos el workbook destino en: {finanzas_path}")
+                st.warning(f"Destination workbook not found at: {finanzas_path}")
 
             to_import_final = render_review_step(
                 parsed_df=parsed_df,
@@ -285,14 +285,14 @@ if mode == "Archivo Excel":
         except Exception as exc:
             st.error(f"No pudimos leer el archivo de movimientos: {exc}")
 else:
-    render_step_title(1, "Cargar captura bancaria")
+    render_step_title(1, "Load bank capture")
     current_year = datetime.now().year
     st.markdown(
-        f"<div class='subtle'>Subi hasta 3 capturas bancarias. Carga manual asistida, con precarga OCR opcional cuando este disponible. Fecha dd/mm usa ano {current_year}.</div>",
+        f"<div class='subtle'>Upload up to 3 bank captures. Manual entry is assisted, with optional OCR preload when available. Dates in dd/mm use year {current_year}.</div>",
         unsafe_allow_html=True,
     )
     bna_files = st.file_uploader(
-        "Arrastra capturas bancarias (.jpg/.jpeg/.png) - maximo 3",
+        "Drag bank captures here (.jpg/.jpeg/.png) - up to 3 files",
         type=["jpg", "jpeg", "png"],
         key="bna_capture_uploader",
         accept_multiple_files=True,
@@ -301,31 +301,31 @@ else:
     bna_result: BnaParseResult | None = None
     bna_plan: ImportPlan | None = None
     if "bna_date_mode" not in st.session_state:
-        st.session_state.bna_date_mode = "No importar fechas ya existentes"
+        st.session_state.bna_date_mode = "Exclude existing dates"
 
-    st.caption("Filtro de fechas para capturas")
+    st.caption("Date filter for bank captures")
     bna_mode_cols = st.columns(2)
     with bna_mode_cols[0]:
         if st.button(
-            "Excluir fechas existentes",
-            type="primary" if st.session_state.bna_date_mode == "No importar fechas ya existentes" else "secondary",
+            "Exclude existing dates",
+            type="primary" if st.session_state.bna_date_mode == "Exclude existing dates" else "secondary",
             width="stretch",
             key="bna_mode_existing",
         ):
-            st.session_state.bna_date_mode = "No importar fechas ya existentes"
+            st.session_state.bna_date_mode = "Exclude existing dates"
     with bna_mode_cols[1]:
         if st.button(
-            "Solo posteriores",
-            type="primary" if st.session_state.bna_date_mode == "Solo importar movimientos posteriores a la ultima fecha" else "secondary",
+            "Only after latest date",
+            type="primary" if st.session_state.bna_date_mode == "Only after latest existing date" else "secondary",
             width="stretch",
             key="bna_mode_after",
         ):
-            st.session_state.bna_date_mode = "Solo importar movimientos posteriores a la ultima fecha"
+            st.session_state.bna_date_mode = "Only after latest existing date"
 
     bna_date_mode_label = st.session_state.bna_date_mode
     bna_date_filter_mode = (
         DATE_FILTER_MODE_SKIP_EXISTING
-        if bna_date_mode_label.startswith("No importar")
+        if bna_date_mode_label.startswith("Exclude")
         else DATE_FILTER_MODE_AFTER_MAX
     )
 
@@ -333,13 +333,13 @@ else:
     if bna_files:
         selected_files = bna_files[:3]
         if len(bna_files) > 3:
-            st.warning("Se tomaran solo las primeras 3 capturas.")
+            st.warning("Only the first 3 captures will be processed.")
 
         preview_cols = st.columns(len(selected_files))
         for idx, capture_file in enumerate(selected_files):
             with preview_cols[idx]:
                 preview_image = _build_bna_private_preview(capture_file.getvalue())
-                st.image(preview_image, caption=f"Vista privada: {capture_file.name}", width=240)
+                st.image(preview_image, caption=f"Private preview: {capture_file.name}", width=240)
 
         seed_rows: list[dict[str, object]] = []
         ocr_warnings: list[str] = []
@@ -359,7 +359,7 @@ else:
                             }
                         )
             except Exception as exc:
-                ocr_warnings.append(f"[{capture_file.name}] Precarga OCR no disponible: {exc}")
+                ocr_warnings.append(f"[{capture_file.name}] OCR preload unavailable: {exc}")
 
         for warning in ocr_warnings:
             st.warning(warning)
@@ -390,8 +390,8 @@ else:
                 .reset_index(drop=True)
             )
 
-        render_step_title(2, "Completar movimientos (manual)")
-        st.caption(f"Fecha en formato dd/mm (se completa ano {current_year}). Usa `+` para ingresos y `-` para gastos. `CR INTERB` se toma como Ingreso.")
+        render_step_title(2, "Complete transactions manually")
+        st.caption(f"Use dd/mm dates (year {current_year} is added automatically). Use `+` for income and `-` for expense. `CR INTERB` is treated as income.")
         edited_df = _render_bna_manual_editor(seed_df)
 
         rows: list[dict[str, object]] = []
@@ -410,13 +410,13 @@ else:
 
             fecha = pd.to_datetime(fecha_raw, dayfirst=True, errors="coerce")
             if pd.isna(fecha):
-                parse_errors.append(f"Fila {idx + 1}: fecha invalida '{row.get('fecha', '')}'.")
+                parse_errors.append(f"Row {idx + 1}: invalid date '{row.get('fecha', '')}'.")
                 continue
 
             try:
                 monto_signed = float(parse_number_ar(monto_raw))
             except Exception:
-                parse_errors.append(f"Fila {idx + 1}: monto invalido '{monto_raw}'.")
+                parse_errors.append(f"Row {idx + 1}: invalid amount '{monto_raw}'.")
                 continue
             monto_val = abs(monto_signed)
             if monto_val <= 0:
@@ -426,7 +426,7 @@ else:
             if "CR INTERB" in desc.upper():
                 tipo = "Ingreso"
 
-            desc_safe = desc if desc else "Movimiento bancario"
+            desc_safe = desc if desc else "Bank transaction"
             desc_safe, categoria, subcategoria, regla = infer_category_from_description(desc_safe, default_category="Otros")
             desc_norm = normalize_description(desc_safe)
             ref_seed = f"bank_capture|manual|{fecha.strftime('%Y-%m-%d')}|{tipo}|{monto_val:.2f}|{desc_norm}"
@@ -436,7 +436,7 @@ else:
                 continue
 
             seen_bna_refs.add(mp_ref)
-            note = f"origen=captura_bancaria; banco=bna; mp_ref={mp_ref}"
+            note = f"source=bank_capture; bank=bna; mp_ref={mp_ref}"
             rows.append(
                 {
                     "date": fecha,
@@ -460,42 +460,42 @@ else:
 
         if rows:
             parsed_df = pd.DataFrame(rows).sort_values("date").reset_index(drop=True)
-            render_step_title(3, "Preview captura bancaria")
+            render_step_title(3, "Bank capture preview")
             render_preview_table(
                 format_preview_df(parsed_df).head(100),
                 ["date", "tipo_visual", "categoria", "descripcion", "monto", "compartido"],
                 {
-                    "date": "Fecha",
-                    "tipo_visual": "Tipo",
-                    "categoria": "Categoria",
-                    "descripcion": "Descripcion",
-                    "monto": "Monto",
-                    "compartido": "Compartido",
+                    "date": "Date",
+                    "tipo_visual": "Type",
+                    "categoria": "Category",
+                    "descripcion": "Description",
+                    "monto": "Amount",
+                    "compartido": "Shared",
                 },
             )
             if duplicate_rows_in_batch > 0:
-                st.info(f"Se detectaron y omitieron {duplicate_rows_in_batch} duplicados entre capturas.")
+                st.info(f"{duplicate_rows_in_batch} duplicates were detected and skipped across captures.")
         else:
-            st.info("Completa al menos una fila valida para previsualizar e importar.")
+            st.info("Complete at least one valid row to preview and import.")
 
     if parsed_df is not None and not parsed_df.empty:
         if finanzas_path.strip() and Path(finanzas_path).exists():
             try:
                 bna_plan = build_import_plan(parsed_df, Path(finanzas_path), date_filter_mode=bna_date_filter_mode)
             except Exception as exc:
-                st.error(f"No se pudo calcular el plan de importacion de captura bancaria: {exc}")
+                st.error(f"Could not build the bank capture import plan: {exc}")
         else:
-            st.warning(f"No encontramos el workbook destino en: {finanzas_path}")
+            st.warning(f"Destination workbook not found at: {finanzas_path}")
 
         to_import = int(bna_plan.to_import_df.shape[0]) if bna_plan is not None else int(parsed_df.shape[0])
         dupes_ref = int(bna_plan.duplicate_mp_ref_df.shape[0]) if bna_plan is not None else 0
         dupes_key = int(bna_plan.duplicate_compound_df.shape[0]) if bna_plan is not None else 0
         st.info(
-            f"Cargados: {int(parsed_df.shape[0])} | A importar: {to_import} | Duplicados ref: {dupes_ref} | Duplicados clave: {dupes_key}"
+            f"Loaded: {int(parsed_df.shape[0])} | To import: {to_import} | Duplicate refs: {dupes_ref} | Duplicate keys: {dupes_key}"
         )
 
-        confirm_bna = st.checkbox("Confirmo importacion de movimientos de captura bancaria", value=False)
-        if st.button("Importar captura bancaria", type="primary", disabled=not confirm_bna):
+        confirm_bna = st.checkbox("I confirm the bank capture import", value=False)
+        if st.button("Import bank capture", type="primary", disabled=not confirm_bna):
             import_df = bna_plan.to_import_df if bna_plan is not None else parsed_df
             try:
                 result = import_into_finanzas_workbook(
@@ -505,19 +505,19 @@ else:
                     default_category=default_category,
                 )
                 if result.note == "No rows to import":
-                    st.info("No hay filas nuevas para importar desde la captura bancaria.")
+                    st.info("There are no new rows to import from the bank capture.")
                 else:
                     st.success(
-                        "Importacion de captura bancaria completada: "
-                        f"{result.added_rows} agregadas, "
-                        f"{result.skipped_rows_by_date} saltadas por fecha, "
-                        f"{result.duplicate_rows_mp_ref} duplicadas por referencia, "
-                        f"{result.duplicate_rows_compound_key} duplicadas por clave."
+                        "Bank capture import completed: "
+                        f"{result.added_rows} added, "
+                        f"{result.skipped_rows_by_date} skipped by date, "
+                        f"{result.duplicate_rows_mp_ref} duplicate references, "
+                        f"{result.duplicate_rows_compound_key} duplicate compound keys."
                     )
                     if result.backup_path is not None:
-                        st.info("Backup generado:")
+                        st.info("Backup created:")
                         st.code(str(result.backup_path))
             except Exception as exc:
-                st.error(f"Ocurrio un error importando la captura bancaria al workbook destino: {exc}")
+                st.error(f"An error occurred while importing the bank capture into the destination workbook: {exc}")
 
 render_footer()
