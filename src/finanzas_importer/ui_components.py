@@ -889,21 +889,20 @@ def inject_styles() -> None:
 def setup_sidebar() -> tuple[str, str, str, bool, float]:
     with st.sidebar:
         st.markdown("<div class='sidebar-title'>Panel de importacion</div>", unsafe_allow_html=True)
-        gdrive_default = Path(r"G:\Mi unidad\FINANZAS.xlsx")
         demo_default = (Path.cwd() / "FINANZAS_demo.xlsx").resolve()
         local_default = (Path.cwd() / "FINANZAS.xlsx").resolve()
-        if demo_default.exists():
-            default_path = str(demo_default)
-        elif gdrive_default.exists():
-            default_path = str(gdrive_default)
-        else:
+        if local_default.exists():
             default_path = str(local_default)
+        elif demo_default.exists():
+            default_path = str(demo_default)
+        else:
+            default_path = ""
 
         st.markdown("<div class='sidebar-section'>Archivo base</div>", unsafe_allow_html=True)
         st.caption("Ruta destino")
         finanzas_path = st.text_area("Ruta destino", value=default_path, height=82, label_visibility="collapsed")
         if demo_default.exists():
-            st.caption("Se detecto un demo. Conviene usarlo para no tocar el archivo real.")
+            st.caption("Se detecto un demo. Queda disponible como alternativa para pruebas.")
 
         st.markdown("<div class='sidebar-section'>Filtro de fechas</div>", unsafe_allow_html=True)
         st.caption("Regla de corte")
@@ -947,7 +946,7 @@ def file_size_mb(size_bytes: int) -> str:
 
 def is_path_writable(path_value: str) -> tuple[bool, str]:
     if not path_value.strip():
-        return False, "Defini la ruta del archivo FINANZAS.xlsx."
+        return False, "Defini la ruta del workbook financiero."
     path = Path(path_value)
     if not path.exists():
         return False, "No existe ese archivo en disco."
@@ -963,16 +962,16 @@ def is_path_writable(path_value: str) -> tuple[bool, str]:
 
 def render_hero(finanzas_ok: bool, finanzas_msg: str) -> None:
     status_class = "status-ok" if finanzas_ok else "status-bad"
-    status_text = "FINANZAS listo" if finanzas_ok else "Revisar FINANZAS"
+    status_text = "Workbook listo" if finanzas_ok else "Revisar workbook"
     st.markdown(
         f"""
         <section class="hero">
             <div class="hero-grid">
                 <div>
                     <div class="hero-kicker">Importacion de movimientos</div>
-                    <h1>Importador de gastos e ingresos</h1>
+                    <h1>Financial Operations Importer</h1>
                     <div class="hero-copy">
-                        Carga movimientos desde un Excel o una captura, revisa duplicados y confirma la escritura
+                        Carga movimientos desde un Excel o una captura, revisa duplicados y confirma la actualizacion
                         solo cuando el resultado ya esta claro.
                     </div>
                     <div class="hero-list">
@@ -1207,7 +1206,7 @@ def render_review_step(
     total_rows = len(parsed_df)
     filtered_rendimientos = parse_result.filtered_reasons.get(FILTER_REASON_RENDIMIENTOS, 0)
     filtered_self_transfer = parse_result.filtered_reasons.get(FILTER_REASON_SELF_TRANSFER, 0)
-    marked_shared_nadia = parse_result.nadia_shared_count
+    marked_shared_transfers = parse_result.shared_transfer_count
     skipped_by_date = int(plan.filtered_by_date_df.shape[0]) if plan else 0
     dupes_ref = int(plan.duplicate_mp_ref_df.shape[0]) if plan else 0
     dupes_key = int(plan.duplicate_compound_df.shape[0]) if plan else 0
@@ -1230,7 +1229,7 @@ def render_review_step(
     metric_cols[0].metric("Detectados", f"{total_rows}")
     metric_cols[1].metric("Saltados por fecha", f"{skipped_by_date}")
     metric_cols[2].metric("Duplicados", f"{dupes_ref + dupes_key}")
-    metric_cols[3].metric("Marcados compartido", f"{marked_shared_nadia}")
+    metric_cols[3].metric("Marcados compartidos", f"{marked_shared_transfers}")
     metric_cols[4].metric("A importar", f"{to_import}")
 
     hidden_filters = filtered_rendimientos + filtered_self_transfer + dupes_ref + dupes_key
@@ -1334,9 +1333,9 @@ def render_review_step(
         st.caption(f"Modo de fecha: `{mode_caption}`")
         st.caption(f"Columna de fecha usada en parseo: `{parse_result.date_source_column}`")
         if plan is not None:
-            st.caption(f"Tabla detectada en FINANZAS.xlsx: `{plan.table_name}`")
+            st.caption(f"Tabla detectada en el workbook: `{plan.table_name}`")
         if plan_error:
-            st.error(f"No se pudo validar duplicados contra FINANZAS.xlsx: {plan_error}")
+            st.error(f"No se pudo validar duplicados contra el workbook: {plan_error}")
 
         with st.expander("Tecnico: reglas de categoria", expanded=False):
             rules_summary = (
@@ -1553,7 +1552,7 @@ def render_import_step(
     default_category: str,
     importer_fn: Callable[..., object],
 ) -> None:
-    render_step_title(4, "Importar en FINANZAS.xlsx")
+    render_step_title(4, "Actualizar workbook")
     st.markdown(
         """
         <div style="margin:0.2rem 0 1rem; padding:1rem 1.15rem; border-radius:20px; border:1px solid rgba(36,50,74,0.95); background:linear-gradient(180deg, rgba(18,26,43,0.94) 0%, rgba(15,22,39,0.98) 100%); box-shadow:0 16px 36px rgba(2,6,23,0.3);">
@@ -1574,7 +1573,7 @@ def render_import_step(
     force_write = False
     if to_import_final == 0:
         force_write = st.checkbox("Forzar escritura aunque no haya filas nuevas", value=False)
-    confirm_import = st.checkbox("Entiendo que se modificara FINANZAS.xlsx", value=False)
+    confirm_import = st.checkbox("Entiendo que se modificara el workbook destino", value=False)
 
     disable_import = (
         parsed_df is None
@@ -1591,7 +1590,7 @@ def render_import_step(
         elif parse_result.suspicious_dates and not importar_igual:
             st.warning("Confirma fechas para continuar.")
         elif not finanzas_path.strip():
-            st.warning("Completa la ruta de FINANZAS.xlsx.")
+            st.warning("Completa la ruta del workbook destino.")
         else:
             try:
                 result = importer_fn(
@@ -1601,7 +1600,7 @@ def render_import_step(
                     default_category=default_category,
                 )
                 if result.note == "No rows to import":
-                    st.info("No hay filas nuevas para importar. FINANZAS.xlsx quedo sin cambios.")
+                    st.info("No hay filas nuevas para importar. El workbook quedo sin cambios.")
                     st.stop()
                 st.success(
                     "Importacion completada: "
@@ -1615,7 +1614,7 @@ def render_import_step(
                     st.code(str(result.backup_path))
             except PermissionError:
                 st.error(
-                    "No se pudo guardar FINANZAS.xlsx. Cerra el archivo en Excel y, si esta en Google Drive, marca 'Disponible sin conexion'."
+                    "No se pudo guardar el workbook. Cerra el archivo en Excel y, si esta sincronizado en la nube, marca 'Disponible sin conexion'."
                 )
             except Exception as exc:
-                st.error(f"Ocurrio un error importando a FINANZAS.xlsx: {exc}")
+                st.error(f"Ocurrio un error importando al workbook destino: {exc}")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 from typing import BinaryIO
 import re
@@ -21,7 +22,27 @@ DATE_CANDIDATES = [
 FILTER_REASON_RENDIMIENTOS = "Rendimientos"
 FILTER_REASON_SELF_TRANSFER = "Transferencia interna (self)"
 _DATE_DOMINANT_DAY_THRESHOLD = 0.70
-SELF_TRANSFER_TOKENS = ("joaquin", "rene", "matias")
+
+
+def _strip_accents(text: str) -> str:
+    return "".join(ch for ch in unicodedata.normalize("NFKD", text) if not unicodedata.combining(ch))
+
+
+def _load_token_groups(env_name: str) -> tuple[tuple[str, ...], ...]:
+    raw_value = os.getenv(env_name, "").strip()
+    if not raw_value:
+        return tuple()
+
+    groups: list[tuple[str, ...]] = []
+    for raw_group in raw_value.split(";"):
+        tokens = tuple(_strip_accents(token.strip().lower()) for token in raw_group.split(",") if token.strip())
+        if tokens:
+            groups.append(tokens)
+    return tuple(groups)
+
+
+SELF_TRANSFER_TOKEN_GROUPS = _load_token_groups("FINANCE_IMPORTER_SELF_TRANSFER_GROUPS")
+SHARED_TRANSFER_TOKEN_GROUPS = _load_token_groups("FINANCE_IMPORTER_SHARED_TRANSFER_GROUPS")
 
 
 @dataclass
@@ -30,7 +51,7 @@ class ParseResult:
     filtered_df: pd.DataFrame
     filtered_reasons: dict[str, int]
     self_transfer_examples: pd.DataFrame
-    nadia_shared_count: int
+    shared_transfer_count: int
     date_source_column: str
     suspicious_dates: bool
     suspicious_day_ratio: float
@@ -45,10 +66,6 @@ def _find_header_row(path_or_buffer: str | Path | BinaryIO) -> int:
             return int(idx)
 
     raise ValueError("No se encontro la fila header con RELEASE_DATE en el Excel de Mercado Pago.")
-
-
-def _strip_accents(text: str) -> str:
-    return "".join(ch for ch in unicodedata.normalize("NFKD", text) if not unicodedata.combining(ch))
 
 
 def normalize_description(text: object) -> str:
@@ -83,37 +100,27 @@ def _is_sent_transfer(text: object) -> bool:
     return "transferencia enviada" in lowered or "tranferencia enviada" in lowered
 
 
+def _matches_token_groups(text: object, token_groups: tuple[tuple[str, ...], ...]) -> bool:
+    if not token_groups:
+        return False
+    lowered = _strip_accents(str(text).lower())
+    return any(all(token in lowered for token in group) for group in token_groups)
+
+
 def _is_self_transfer(text: object) -> bool:
-    lowered = _strip_accents(str(text).lower())
-    return _is_transfer(lowered) and all(token in lowered for token in SELF_TRANSFER_TOKENS)
+    return _is_transfer(text) and _matches_token_groups(text, SELF_TRANSFER_TOKEN_GROUPS)
 
 
-def _is_nadia_transfer(text: object) -> bool:
-    lowered = _strip_accents(str(text).lower())
-    return _is_transfer(lowered) and "nadia" in lowered
+def _is_configured_shared_transfer(text: object) -> bool:
+    return _is_transfer(text) and _matches_token_groups(text, SHARED_TRANSFER_TOKEN_GROUPS)
 
 
-def _is_nadia_sent_transfer(text: object) -> bool:
-    lowered = _strip_accents(str(text).lower())
-    return _is_nadia_transfer(lowered) and _is_sent_transfer(lowered)
-
-
-def _is_nadia_caceres_transfer(text: object) -> bool:
-    lowered = _strip_accents(str(text).lower())
-    lowered = re.sub(r"\s+", " ", lowered).strip()
-    return _is_transfer(lowered) and (
-        "nadia marisol caceres" in lowered
-        or ("nadia" in lowered and "marisol" in lowered and "caceres" in lowered)
-    )
+def _is_configured_shared_sent_transfer(text: object) -> bool:
+    return _is_configured_shared_transfer(text) and _is_sent_transfer(text)
 
 
 def _resolve_tipo(transaction_type: object, amount: float) -> str:
-    lowered = _strip_accents(str(transaction_type).lower())
-    if (
-        "transferencia enviada nadia" in lowered
-        or "tranferencia enviada nadia" in lowered
-        or _is_nadia_caceres_transfer(transaction_type)
-    ):
+    if _is_configured_shared_sent_transfer(transaction_type):
         return "Gasto"
     return "Gasto" if amount < 0 else "Ingreso"
 
@@ -265,13 +272,12 @@ def parse_mercado_pago_excel(path_or_buffer: str | Path | BinaryIO) -> ParseResu
 
     categories = mp["descripcion"].map(lambda d: infer_category_from_description(d, default_category="Otros"))
     mp["descripcion"], mp["categoria"], mp["subcategoria"], mp["regla_categoria"] = zip(*categories)
-    nadia_mask = mp["TRANSACTION_TYPE"].map(_is_nadia_transfer) | mp["TRANSACTION_TYPE"].map(_is_nadia_caceres_transfer)
-    nadia_sent_mask = mp["TRANSACTION_TYPE"].map(_is_nadia_sent_transfer)
-    nadia_shared_mask = nadia_mask & ~nadia_sent_mask
-    mp.loc[nadia_shared_mask, "compartido"] = "S?"
-    mp.loc[nadia_sent_mask, "compartido"] = "No"
-    mp.loc[mp["TRANSACTION_TYPE"].map(_is_nadia_caceres_transfer), "tipo"] = "Gasto"
-    nadia_shared_count = int(nadia_shared_mask.sum())
+    shared_transfer_mask = mp["TRANSACTION_TYPE"].map(_is_configured_shared_transfer)
+    shared_sent_mask = mp["TRANSACTION_TYPE"].map(_is_configured_shared_sent_transfer)
+    shared_review_mask = shared_transfer_mask & ~shared_sent_mask
+    mp.loc[shared_review_mask, "compartido"] = "S?"
+    mp.loc[shared_sent_mask, "compartido"] = "No"
+    shared_transfer_count = int(shared_review_mask.sum())
 
     std = mp[
         [
@@ -302,7 +308,7 @@ def parse_mercado_pago_excel(path_or_buffer: str | Path | BinaryIO) -> ParseResu
         filtered_df=filtered_df.reset_index(drop=True),
         filtered_reasons=filtered_reasons,
         self_transfer_examples=self_transfer_examples,
-        nadia_shared_count=nadia_shared_count,
+        shared_transfer_count=shared_transfer_count,
         date_source_column=date_source_column,
         suspicious_dates=suspicious_dates,
         suspicious_day_ratio=suspicious_ratio,

@@ -1,10 +1,12 @@
-# Automatizacion de Finanzas Personales
+# Financial Operations Importer
 
-Aplicacion local en Streamlit para importar, revisar y consolidar movimientos financieros en `FINANZAS.xlsx` desde dos fuentes:
+Streamlit tool for transaction intake, review, deduplication and controlled workbook updates.
+
+Aplicacion local en Streamlit para importar, revisar y consolidar movimientos financieros en un workbook estructurado desde dos fuentes:
 - exportes Excel de Mercado Pago
 - capturas bancarias con carga manual asistida y OCR opcional
 
-El objetivo del proyecto es reducir carga manual, evitar duplicados y dejar una trazabilidad clara antes de escribir en el workbook final.
+El objetivo del proyecto es reducir carga manual, evitar duplicados y dejar una trazabilidad clara antes de actualizar el archivo destino.
 
 ## Que resuelve
 
@@ -14,11 +16,19 @@ El objetivo del proyecto es reducir carga manual, evitar duplicados y dejar una 
 - muestra preview, metricas de control e insights mensuales
 - permite trabajar con assets demo para mostrar el flujo sin usar datos reales
 
+## Business value
+
+- reduce carga manual en el ingreso de movimientos
+- evita importaciones duplicadas antes del write-back
+- preserva la estructura del workbook y sus formulas
+- mejora la trazabilidad mensual con preview, alertas y KPIs
+- agrega una capa de control antes de actualizar el archivo final
+
 ## Alcance actual
 
 - `Mercado Pago (Excel)`: importa `.xlsx` o `.xls` exportados desde MP
 - `Captura bancaria`: toma `.jpg`, `.jpeg` o `.png` y permite completar movimientos en una tabla editable
-- `FINANZAS.xlsx`: escribe en hoja `Control de ingresos y gastos`, tabla `tblControlIngresosGastos`
+- `Workbook destino`: escribe en hoja `Control de ingresos y gastos`, tabla `tblControlIngresosGastos`
 
 ## Requisitos
 
@@ -40,7 +50,7 @@ streamlit run app.py
 
 ## Flujo de uso
 
-1. Completar `FINANZAS_PATH` con la ruta local del workbook.
+1. Completar la ruta local del workbook destino.
 2. Elegir modo de importacion.
 3. Subir archivo Excel o capturas bancarias.
 4. Revisar preview, duplicados y metricas.
@@ -56,7 +66,26 @@ Estos archivos estan sintetizados para mostrar el flujo completo sin exponer dat
 
 Las capturas bancarias reales u originales pueden servir para pruebas locales, pero no forman parte del material publicable del repo.
 
-Si `FINANZAS_demo.xlsx` existe en la carpeta del proyecto, la app lo sugiere por defecto para reducir riesgo de escritura sobre un archivo personal.
+Si `FINANZAS_demo.xlsx` existe en la carpeta del proyecto, la app lo sugiere por defecto para reducir riesgo de escritura sobre un archivo real.
+
+## Reglas opcionales
+
+Para mantener el repo publicable, las reglas sensibles de transferencias internas o compartidas no quedan hardcodeadas en el codigo. Si queres activarlas localmente, podes definir variables de entorno:
+
+- `FINANCE_IMPORTER_SELF_TRANSFER_GROUPS`
+- `FINANCE_IMPORTER_SHARED_TRANSFER_GROUPS`
+
+Formato:
+
+- grupos separados por `;`
+- tokens dentro de cada grupo separados por `,`
+
+Ejemplo:
+
+```powershell
+$env:FINANCE_IMPORTER_SELF_TRANSFER_GROUPS="cuenta,propia;ahorro,interno"
+$env:FINANCE_IMPORTER_SHARED_TRANSFER_GROUPS="gastos,compartidos;contacto,demo"
+```
 
 ## Regenerar assets demo
 

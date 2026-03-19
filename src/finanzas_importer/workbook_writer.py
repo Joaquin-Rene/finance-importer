@@ -467,7 +467,7 @@ def import_into_finanzas_workbook(
     except PermissionError as exc:
         wb.close()
         raise PermissionError(
-            "Cerrá FINANZAS.xlsx en Excel y/o marcá el archivo como Disponible sin conexión en Google Drive."
+            "Cerra el workbook en Excel y/o marca el archivo como Disponible sin conexion en tu cliente de sincronizacion."
         ) from exc
     wb.close()
 

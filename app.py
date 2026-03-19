@@ -161,7 +161,7 @@ def _render_bna_manual_editor(seed_df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(st.session_state.bna_manual_rows)
 
 
-st.set_page_config(page_title="Importador de gastos e ingresos -> FINANZAS", layout="wide")
+st.set_page_config(page_title="Financial Operations Importer", layout="wide")
 
 
 inject_styles()
@@ -243,7 +243,7 @@ if mode == "Archivo Excel":
                 except Exception as exc:
                     plan_error = str(exc)
             elif finanzas_path.strip():
-                st.warning(f"No encontramos FINANZAS.xlsx en: {finanzas_path}")
+                st.warning(f"No encontramos el workbook destino en: {finanzas_path}")
 
             to_import_final = render_review_step(
                 parsed_df=parsed_df,
@@ -485,7 +485,7 @@ else:
             except Exception as exc:
                 st.error(f"No se pudo calcular el plan de importacion de captura bancaria: {exc}")
         else:
-            st.warning(f"No encontramos FINANZAS.xlsx en: {finanzas_path}")
+            st.warning(f"No encontramos el workbook destino en: {finanzas_path}")
 
         to_import = int(bna_plan.to_import_df.shape[0]) if bna_plan is not None else int(parsed_df.shape[0])
         dupes_ref = int(bna_plan.duplicate_mp_ref_df.shape[0]) if bna_plan is not None else 0
@@ -518,6 +518,6 @@ else:
                         st.info("Backup generado:")
                         st.code(str(result.backup_path))
             except Exception as exc:
-                st.error(f"Ocurrio un error importando la captura bancaria a FINANZAS.xlsx: {exc}")
+                st.error(f"Ocurrio un error importando la captura bancaria al workbook destino: {exc}")
 
 render_footer()
